@@ -71,6 +71,7 @@ jobs:
     name: Supergraph schema composition
     runs-on: ubuntu-latest
     needs: [vehicles, leasing]
+    if: github.ref == 'refs/heads/master' || github.event_name == 'pull_request'
 
     steps:
       - uses: actions/checkout@v4
@@ -80,25 +81,10 @@ jobs:
           curl -sSL https://rover.apollo.dev/nix/latest | sh
           echo "$HOME/.rover/bin" >> $GITHUB_PATH
 
-      - name: Start subgraph services
-        run: docker compose up -d vehicles leasing
-        env:
-          APOLLO_ELV2_LICENSE: accept
-
-      - name: Wait for subgraphs to be healthy
-        run: |
-          for service in vehicles leasing; do
-            echo "Waiting for $service..."
-            for i in $(seq 1 30); do
-              docker compose ps $service | grep healthy && break
-              sleep 2
-            done
-          done
-
-      - name: Compose supergraph
+      - name: Compose supergraph from local schema files
         run: |
           rover supergraph compose \
-            --config gateway/supergraph.yaml \
+            --config gateway/supergraph.ci.yaml \
             --output /tmp/supergraph.graphql
         env:
           APOLLO_ELV2_LICENSE: accept
