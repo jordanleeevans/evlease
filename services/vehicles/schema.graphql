@@ -1,4 +1,4 @@
-type Vehicle {
+type Vehicle @key(fields: "id") {
     id: ID!
     make: String!
     model: String!
