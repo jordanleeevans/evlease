@@ -1,13 +1,28 @@
 import logging
+import os
 
 from ariadne import QueryType, load_schema_from_path
 from ariadne.asgi import GraphQL
 from ariadne.contrib.federation import make_federated_schema
 from fastapi import FastAPI
+from opentelemetry import trace
+from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
+from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+from opentelemetry.sdk.resources import Resource
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
 from repositories import LeasingRepository
 
 logging.basicConfig(level=logging.DEBUG)
+
+_otlp_endpoint = os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT", "http://jaeger:4317")
+_resource = Resource.create({"service.name": "leasing"})
+_provider = TracerProvider(resource=_resource)
+_provider.add_span_processor(
+    BatchSpanProcessor(OTLPSpanExporter(endpoint=_otlp_endpoint))
+)
+trace.set_tracer_provider(_provider)
 
 schema_str = load_schema_from_path("schema.graphql")
 query = QueryType()
@@ -41,6 +56,7 @@ schema = make_federated_schema(
 schema.type_map["LeaseQuote"].fields["vehicle"].resolve = resolve_lease_quote_vehicle
 
 app = FastAPI()
+FastAPIInstrumentor.instrument_app(app)
 
 
 @app.get("/health")

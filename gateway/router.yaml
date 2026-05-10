@@ -7,3 +7,11 @@ sandbox:
 
 homepage:
   enabled: false
+
+telemetry:
+  exporters:
+    tracing:
+      otlp:
+        enabled: true
+        endpoint: http://jaeger:4317
+        protocol: grpc

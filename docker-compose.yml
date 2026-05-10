@@ -75,5 +75,14 @@ services:
       -c /dist/config/router.yaml
       -s /supergraph/supergraph.graphql
 
+  # ── Observability ────────────────────────────────────────────────────────────
+
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    ports:
+      - "16686:16686"
+      - "4317:4317"
+      - "4318:4318"
+
 volumes:
   supergraph_schema:
