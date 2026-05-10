@@ -7,7 +7,7 @@ type Vehicle @key(fields: "id") {
     colour: String
     imageUrl: String
     rangeMiles: Int
-    batterySizeKwh: Int
+    batterySizeKwh: Float
     available: Boolean!
 }
 

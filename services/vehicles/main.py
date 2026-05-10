@@ -39,4 +39,10 @@ schema = make_federated_schema(schema, query, vehicle_type, convert_names_case=T
 # Mount Ariadne GraphQL as sub-application for FastAPI
 app = FastAPI()
 
+
+@app.get("/health")
+def health():
+    return {"status": "ok"}
+
+
 app.mount("/graphql/", GraphQL(schema, debug=True))

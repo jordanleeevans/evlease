@@ -1,0 +1,59 @@
+services:
+
+  # ── Subgraphs ────────────────────────────────────────────────────────────────
+
+  vehicles:
+    build:
+      context: services/vehicles
+    ports:
+      - "8001:8001"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://localhost:8001/health')",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  # ── Schema composition ───────────────────────────────────────────────────────
+
+  rover:
+    build:
+      context: gateway
+      dockerfile: Dockerfile.rover
+    depends_on:
+      vehicles:
+        condition: service_healthy
+    volumes:
+      - supergraph_schema:/supergraph
+      - ./gateway:/config:ro
+    environment:
+      APOLLO_ELV2_LICENSE: accept
+    command: >
+      supergraph compose
+      --config /config/supergraph.yaml
+      --output /supergraph/supergraph.graphql
+
+  # ── Gateway ──────────────────────────────────────────────────────────────────
+
+  router:
+    image: ghcr.io/apollographql/router:v2.14.0
+    depends_on:
+      rover:
+        condition: service_completed_successfully
+    ports:
+      - "4000:4000"
+    volumes:
+      - supergraph_schema:/supergraph:ro
+      - ./gateway/router.yaml:/dist/config/router.yaml:ro
+    command: >
+      -c /dist/config/router.yaml
+      -s /supergraph/supergraph.graphql
+
+volumes:
+  supergraph_schema:
