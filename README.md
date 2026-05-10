@@ -1,5 +1,8 @@
 # EVLease
 
+[![CI](https://github.com/jordanleeevans/evlease/actions/workflows/ci.yml/badge.svg)](https://github.com/jordanleeevans/evlease/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/jordanleeevans/evlease/graph/badge.svg)](https://codecov.io/gh/jordanleeevans/evlease)
+
 A modern EV leasing platform built as a GraphQL Federation microservices architecture, inspired by [Octopus EV](https://octopusev.com/).
 
 ## Tech Stack
