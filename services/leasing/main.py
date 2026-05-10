@@ -7,7 +7,7 @@ from fastapi import FastAPI
 
 from repositories import LeasingRepository
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 
 schema_str = load_schema_from_path("schema.graphql")
 query = QueryType()
