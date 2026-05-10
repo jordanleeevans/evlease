@@ -1,0 +1,29 @@
+extend schema
+  @link(url: "https://specs.apollo.dev/federation/v2.0", import: ["@key"])
+
+"""
+Vehicle stub — owned by the vehicles subgraph.
+resolvable: false means this service never resolves Vehicle entities itself.
+"""
+type Vehicle @key(fields: "id", resolvable: false) {
+  id: ID!
+}
+
+"""A lease quote for a specific vehicle, term, and mileage combination."""
+type LeaseQuote {
+  id: ID!
+  vehicle: Vehicle!
+  termMonths: Int!
+  annualMileageMiles: Int!
+  monthlyPaymentGbp: Float!
+  initialPaymentGbp: Float!
+  excessMileageRateGbp: Float!
+}
+
+type Query {
+  """Calculate a lease quote for a vehicle."""
+  leaseQuote(vehicleId: ID!, termMonths: Int!, annualMileageMiles: Int!): LeaseQuote
+
+  """Return all available lease plan options for a vehicle."""
+  leasePlans(vehicleId: ID!): [LeaseQuote!]!
+}

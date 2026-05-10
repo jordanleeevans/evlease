@@ -20,6 +20,24 @@ services:
       retries: 10
       start_period: 10s
 
+  leasing:
+    build:
+      context: services/leasing
+    ports:
+      - "8002:8002"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://localhost:8002/health')",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
   # ── Schema composition ───────────────────────────────────────────────────────
 
   rover:
@@ -28,6 +46,8 @@ services:
       dockerfile: Dockerfile.rover
     depends_on:
       vehicles:
+        condition: service_healthy
+      leasing:
         condition: service_healthy
     volumes:
       - supergraph_schema:/supergraph

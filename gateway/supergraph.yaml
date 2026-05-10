@@ -1,5 +1,9 @@
 federation_version: =2.13.0
 subgraphs:
+  leasing:
+    routing_url: http://leasing:8002/graphql/
+    schema:
+      subgraph_url: http://leasing:8002/graphql/
   vehicles:
     routing_url: http://vehicles:8001/graphql/
     schema:
