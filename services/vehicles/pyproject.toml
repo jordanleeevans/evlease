@@ -1,0 +1,28 @@
+[project]
+name = "vehicles"
+version = "0.1.0"
+description = "An API for managing vehicles."
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "ariadne>=1.0.1",
+    "fastapi[standard]>=0.136.1",
+]
+
+[dependency-groups]
+dev = [
+    "httpx>=0.28.1",
+    "pre-commit>=4.6.0",
+    "pytest>=9.0.3",
+    "ruff>=0.15.12",
+]
+
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.ruff.format]
+quote-style = "double"
