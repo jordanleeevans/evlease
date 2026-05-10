@@ -1,0 +1,17 @@
+type Vehicle {
+    id: ID!
+    make: String!
+    model: String!
+    year: Int!
+    trim: String
+    colour: String
+    imageUrl: String
+    rangeMiles: Int
+    batterySizeKwh: Int
+    available: Boolean!
+}
+
+type Query {
+    vehicles: [Vehicle!]!
+    vehicle(id: ID!): Vehicle
+}
