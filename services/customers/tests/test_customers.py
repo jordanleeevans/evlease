@@ -1,6 +1,6 @@
 import uuid
 import jwt
-from pytest import skip
+import pytest
 from repositories.customers import _JWT_ALGORITHM, _JWT_SECRET, CustomerRepository
 from schemas import AuthPayload, CustomerLogin, CustomerRecord
 class TestCustomerRepository:
@@ -20,14 +20,14 @@ class TestCustomerRepository:
         encoded_token = result.token
         decoded_token = jwt.decode(encoded_token, _JWT_SECRET, algorithms=[_JWT_ALGORITHM])
 
-        assert str(customer_record.id) in decoded_token
+        assert decoded_token.get("sub") == str(customer_record.id)
         
     
-    @skip(reason="TODO")
+    @pytest.mark.skip(reason="TODO")
     def test_login_with_no_record_raises_auth_error(self):
         pass
 
-    @skip(reason="TODO")
+    @pytest.mark.skip(reason="TODO")
     def test_login_with_wrong_password_raises_auth_error(self):
         pass
 
@@ -35,6 +35,6 @@ class TestCustomerRepository:
         repo = CustomerRepository()
         assert repo.get_customer_by_id("nonexistent") is None
     
-    @skip(reason="TODO")
+    @pytest.mark.skip(reason="TODO")
     def test_get_customer_by_id_returns_customer(self):
         pass
