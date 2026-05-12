@@ -1,0 +1,26 @@
+extend schema
+  @link(url: "https://specs.apollo.dev/federation/v2.0", import: ["@key"])
+
+type Customer @key(fields: "id") {
+  id: ID!
+  email: String!
+  name: String!
+}
+
+type AuthPayload {
+  token: String!
+  customer: Customer!
+}
+
+type Query {
+  """Return the currently authenticated customer."""
+  me: Customer
+}
+
+type Mutation {
+  """Register a new customer and return a JWT."""
+  register(email: String!, password: String!, name: String!): AuthPayload!
+
+  """Log in and return a JWT."""
+  login(email: String!, password: String!): AuthPayload!
+}

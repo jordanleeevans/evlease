@@ -8,3 +8,7 @@ subgraphs:
     routing_url: http://vehicles:8001/graphql/
     schema:
       subgraph_url: http://vehicles:8001/graphql/
+  customers:
+    routing_url: http://customers:8003/graphql/
+    schema:
+      subgraph_url: http://customers:8003/graphql/

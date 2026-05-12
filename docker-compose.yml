@@ -38,6 +38,24 @@ services:
       retries: 10
       start_period: 10s
 
+  customers:
+    build:
+      context: services/customers
+    ports:
+      - "8003:8003"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://localhost:8003/health')",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
   # ── Schema composition ───────────────────────────────────────────────────────
 
   rover:
@@ -48,6 +66,8 @@ services:
       vehicles:
         condition: service_healthy
       leasing:
+        condition: service_healthy
+      customers:
         condition: service_healthy
     volumes:
       - supergraph_schema:/supergraph

@@ -35,7 +35,7 @@ A modern EV leasing platform built as a GraphQL Federation microservices archite
 | `vehicles-service` | ✅ Complete | Federation entity, 10 mock EVs, full test suite |
 | `leasing-service` | ✅ Complete | Quote engine, pricing logic, federation stub, full test suite |
 | Apollo Router gateway | ✅ Complete | Federation v2, sandbox enabled, supergraph composed via Rover |
-| `customers-service` | 🔲 Planned | Auth, profiles, saved vehicles |
+| `customers-service` | 🔨 In Progress | JWT auth (register/login/me), profiles, saved vehicles |
 | `orders-service` | 🔲 Planned | Lease applications, order status |
 | Next.js frontend | 🔲 Planned | Vehicle listing, quote calculator |
 | PostgreSQL databases | 🔲 Planned | Replace in-memory mock data |
@@ -52,7 +52,7 @@ graph TD
     GW["Apollo Router Gateway\n:4000"]
     VS["vehicles-service\n:8001"]
     LS["leasing-service\n:8002"]
-    CS["customers-service\n:8003 (planned)"]
+    CS["customers-service\n:8003"]
     OS["orders-service\n:8004 (planned)"]
     VDB[("Vehicles DB\nPostgres (planned)")]
     LDB[("Leasing DB\nPostgres (planned)")]
@@ -79,12 +79,17 @@ sequenceDiagram
     participant R as rover (one-shot)
     participant GW as apollo-router
 
+    participant C as customers-service
+
     V->>V: Start uvicorn :8001
     L->>L: Start uvicorn :8002
+    C->>C: Start uvicorn :8003
     V-->>R: healthcheck passes
     L-->>R: healthcheck passes
+    C-->>R: healthcheck passes
     R->>V: POST /graphql/ (_service sdl)
     R->>L: POST /graphql/ (_service sdl)
+    R->>C: POST /graphql/ (_service sdl)
     R->>R: compose supergraph schema
     R-->>GW: write supergraph.graphql to shared volume
     GW->>GW: start router :4000
@@ -130,7 +135,7 @@ erDiagram
 |---|---|---|
 | `vehicles-service` | `8001` | Vehicle catalogue, specs, availability |
 | `leasing-service` | `8002` | Quote engine, pricing rules, lease terms |
-| `customers-service` | `8003` | Auth, user profiles, documents _(planned)_ |
+| `customers-service` | `8003` | JWT auth, user profiles _(in progress)_ |
 | `orders-service` | `8004` | Applications, order status _(planned)_ |
 | Gateway | `4000` | Apollo Router — unified GraphQL API |
 | Frontend | `3000` | Next.js application _(planned)_ |
@@ -154,11 +159,19 @@ evlease/
 │   │   ├── tests/
 │   │   ├── pyproject.toml
 │   │   └── Dockerfile
-│   └── leasing/                # FastAPI + Ariadne federation subgraph
-│       ├── database.py         # Base prices, term/mileage multipliers
-│       ├── repositories/       # Quote calculation logic
+│   ├── leasing/                # FastAPI + Ariadne federation subgraph
+│   │   ├── database.py         # Base prices, term/mileage multipliers
+│   │   ├── repositories/       # Quote calculation logic
+│   │   ├── main.py             # FastAPI app, GraphQL mount, resolvers
+│   │   ├── schema.graphql      # LeaseQuote type, Vehicle stub (@key resolvable: false)
+│   │   ├── tests/
+│   │   ├── pyproject.toml
+│   │   └── Dockerfile
+│   └── customers/              # FastAPI + Ariadne federation subgraph (in progress)
+│       ├── database.py         # In-memory customer store
+│       ├── repositories/       # register/login, JWT signing, bcrypt hashing
 │       ├── main.py             # FastAPI app, GraphQL mount, resolvers
-│       ├── schema.graphql      # LeaseQuote type, Vehicle stub (@key resolvable: false)
+│       ├── schema.graphql      # Customer @key entity, AuthPayload, register/login mutations
 │       ├── tests/
 │       ├── pyproject.toml
 │       └── Dockerfile
@@ -188,6 +201,7 @@ The GraphQL sandbox will be available at **http://localhost:4000**.
 Individual subgraph health checks:
 - Vehicles: http://localhost:8001/health
 - Leasing: http://localhost:8002/health
+- Customers: http://localhost:8003/health
 
 ### Running a single service for development
 
@@ -246,6 +260,44 @@ query {
 }
 ```
 
+### Register a new customer
+```graphql
+mutation {
+  register(email: "ada@example.com", password: "hunter2", name: "Ada Lovelace") {
+    token
+    customer {
+      id
+      name
+      email
+    }
+  }
+}
+```
+
+### Log in
+```graphql
+mutation {
+  login(email: "ada@example.com", password: "hunter2") {
+    token
+    customer {
+      id
+      name
+    }
+  }
+}
+```
+
+### Get the current customer _(requires `Authorization: Bearer <token>` header)_
+```graphql
+query {
+  me {
+    id
+    name
+    email
+  }
+}
+```
+
 ---
 
 ## Leasing Pricing Logic
@@ -293,6 +345,9 @@ cd services/vehicles
 uv run pytest -v
 
 cd services/leasing
+uv run pytest -v
+
+cd services/customers
 uv run pytest -v
 ```
 
